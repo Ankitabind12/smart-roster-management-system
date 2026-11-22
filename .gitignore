@@ -26,6 +26,8 @@ dist-ssr
 # Environment — NEVER commit secrets
 .env
 .env.local
+.env.production
+.env.development
 .env.*.local
 .env.production
 

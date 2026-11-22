@@ -12,11 +12,11 @@ import { z } from 'zod';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
-// Schemas
+// Schemas — match actual DB columns: brand_name, brand_code
 // ---------------------------------------------------------------------------
 const brandSchema = z.object({
-  name: z.string().min(2, 'Name required'),
-  code: z.string().min(1, 'Code required').max(10),
+  brand_name: z.string().min(2, 'Name required'),
+  brand_code: z.string().min(1, 'Code required').max(10),
   description: z.string().optional(),
   status: z.enum(['active', 'inactive']),
   operates_365: z.boolean().default(false),
@@ -66,8 +66,8 @@ function BrandCard({ brand, processCount, onEdit, onDelete }: {
     <div className={cn('card border-l-4 hover:shadow-md transition-shadow', brand.status === 'active' ? 'border-l-blue-500' : 'border-l-slate-300')}>
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-slate-800">{brand.name}</h3>
-          <span className="text-xs font-mono bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{brand.code}</span>
+          <h3 className="font-semibold text-slate-800">{brand.brand_name}</h3>
+          <span className="text-xs font-mono bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{brand.brand_code}</span>
         </div>
         <div className="flex items-center gap-1">
           <button onClick={onEdit} className="icon-btn"><Edit className="w-4 h-4" /></button>
@@ -104,13 +104,13 @@ function BrandForm({ defaultValues, onSubmit, isLoading }: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="form-group">
           <label className="form-label">Brand Name *</label>
-          <input {...register('name')} className={cn('input', errors.name && 'border-red-400')} placeholder="Acme Corp" />
-          {errors.name && <p className="form-error">{errors.name.message}</p>}
+          <input {...register('brand_name')} className={cn('input', errors.brand_name && 'border-red-400')} placeholder="Acme Corp" />
+          {errors.brand_name && <p className="form-error">{errors.brand_name.message}</p>}
         </div>
         <div className="form-group">
           <label className="form-label">Brand Code *</label>
-          <input {...register('code')} className={cn('input uppercase', errors.code && 'border-red-400')} placeholder="ACME" />
-          {errors.code && <p className="form-error">{errors.code.message}</p>}
+          <input {...register('brand_code')} className={cn('input uppercase', errors.brand_code && 'border-red-400')} placeholder="ACME" />
+          {errors.brand_code && <p className="form-error">{errors.brand_code.message}</p>}
         </div>
         <div className="form-group sm:col-span-2">
           <label className="form-label">Description</label>
@@ -170,7 +170,7 @@ function ProcessForm({ defaultValues, onSubmit, isLoading, brands }: {
           <label className="form-label">Brand *</label>
           <select {...register('brand_id')} className={cn('input', errors.brand_id && 'border-red-400')}>
             <option value="">Select Brand...</option>
-            {brands.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            {brands.map((b: any) => <option key={b.id} value={b.id}>{b.brand_name}</option>)}
           </select>
           {errors.brand_id && <p className="form-error">{errors.brand_id.message}</p>}
         </div>
@@ -227,9 +227,11 @@ export default function Brands() {
   const { data: brands = [], isLoading: brandsLoading } = useQuery({
     queryKey: ['brands', search],
     queryFn: async () => {
-      let q = supabase.from('brands').select('*').order('name');
-      if (search) q = q.ilike('name', `%${search}%`);
-      const { data } = await q; return data ?? [];
+      let q = supabase.from('brands').select('*').order('brand_name');
+      if (search) q = q.ilike('brand_name', `%${search}%`);
+      const { data, error } = await q;
+      if (error) return [];
+      return data ?? [];
     },
   });
 
@@ -237,9 +239,11 @@ export default function Brands() {
   const { data: processes = [], isLoading: processesLoading } = useQuery({
     queryKey: ['processes', search],
     queryFn: async () => {
-      let q = supabase.from('processes').select('*, brands:brand_id(name, code)').order('name');
+      let q = supabase.from('processes').select('*, brands:brand_id(brand_name, brand_code)').order('name');
       if (search) q = q.ilike('name', `%${search}%`);
-      const { data } = await q; return data ?? [];
+      const { data, error } = await q;
+      if (error) return [];
+      return data ?? [];
     },
   });
 
@@ -254,7 +258,7 @@ export default function Brands() {
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast('success', 'Brand added'); setShowBrandModal(false); },
-    onError: (e: any) => toast('error', e.message),
+    onError: (e: any) => toast('error', 'Failed to add brand', e.message),
   });
 
   const updateBrand = useMutation({
@@ -263,31 +267,31 @@ export default function Brands() {
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast('success', 'Brand updated'); setEditBrand(null); },
-    onError: (e: any) => toast('error', e.message),
+    onError: (e: any) => toast('error', 'Failed to update brand', e.message),
   });
 
   const deleteBrandMut = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('brands').delete().eq('id', id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast('success', 'Brand deleted'); setDeleteBrand(null); },
-    onError: (e: any) => toast('error', e.message),
+    onError: (e: any) => toast('error', 'Failed to delete brand', e.message),
   });
 
   const addProcess = useMutation({
     mutationFn: async (data: ProcessFormData) => { const { error } = await supabase.from('processes').insert(data); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast('success', 'Process added'); setShowProcessModal(false); },
-    onError: (e: any) => toast('error', e.message),
+    onError: (e: any) => toast('error', 'Failed to add process', e.message),
   });
 
   const updateProcess = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: ProcessFormData }) => { const { error } = await supabase.from('processes').update(data).eq('id', id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast('success', 'Process updated'); setEditProcess(null); },
-    onError: (e: any) => toast('error', e.message),
+    onError: (e: any) => toast('error', 'Failed to update process', e.message),
   });
 
   const deleteProcessMut = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('processes').delete().eq('id', id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast('success', 'Process deleted'); setDeleteProcess(null); },
-    onError: (e: any) => toast('error', e.message),
+    onError: (e: any) => toast('error', 'Failed to delete process', e.message),
   });
 
   const processTypeColor: Record<string, string> = {
@@ -300,8 +304,8 @@ export default function Brands() {
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Brands & Processes</h1>
-          <p className="text-sm text-slate-500">{brands.length} brands Ã‚Â· {processes.length} processes</p>
+          <h1 className="text-2xl font-bold text-slate-900">Brands &amp; Processes</h1>
+          <p className="text-sm text-slate-500">{brands.length} brands · {processes.length} processes</p>
         </div>
         <button
           onClick={() => tab === 'brands' ? setShowBrandModal(true) : setShowProcessModal(true)}
@@ -380,7 +384,7 @@ export default function Brands() {
                       <td className="td font-medium text-slate-800">{p.name}</td>
                       <td className="td font-mono text-xs text-slate-500">{p.code}</td>
                       <td className="td">
-                        {p.brands ? <span className="badge bg-indigo-100 text-indigo-700">{p.brands.name}</span> : 'Ã¢â‚¬â€'}
+                        {p.brands ? <span className="badge bg-indigo-100 text-indigo-700">{p.brands.brand_name}</span> : '—'}
                       </td>
                       <td className="td"><span className={cn('badge', processTypeColor[p.process_type])}>{p.process_type?.replace(/_/g, ' ').toUpperCase()}</span></td>
                       <td className="td text-slate-500">{p.min_daily_staff}</td>
@@ -388,7 +392,7 @@ export default function Brands() {
                         <div className="flex gap-1 flex-wrap">
                           {p.operates_on_sundays && <span className="badge bg-purple-100 text-purple-600 text-xs">Sun</span>}
                           {p.operates_on_holidays && <span className="badge bg-orange-100 text-orange-600 text-xs">Hol</span>}
-                          {!p.operates_on_sundays && !p.operates_on_holidays && <span className="text-slate-300 text-xs">Ã¢â‚¬â€</span>}
+                          {!p.operates_on_sundays && !p.operates_on_holidays && <span className="text-slate-300 text-xs">—</span>}
                         </div>
                       </td>
                       <td className="td"><span className={cn('badge', p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500')}>{p.status}</span></td>
@@ -409,34 +413,54 @@ export default function Brands() {
 
       {/* Brand Modals */}
       {showBrandModal && (
-        <Modal open onClose={() => setShowBrandModal(false)} title="Add Brand" size="lg">
+        <Modal isOpen={true} onClose={() => setShowBrandModal(false)} title="Add Brand" size="lg">
           <BrandForm isLoading={addBrand.isPending} onSubmit={data => addBrand.mutate(data)} />
         </Modal>
       )}
       {editBrand && (
-        <Modal open onClose={() => setEditBrand(null)} title="Edit Brand" size="lg">
-          <BrandForm defaultValues={editBrand} isLoading={updateBrand.isPending} onSubmit={data => updateBrand.mutate({ id: editBrand.id, data })} />
+        <Modal isOpen={true} onClose={() => setEditBrand(null)} title="Edit Brand" size="lg">
+          <BrandForm
+            defaultValues={{ brand_name: editBrand.brand_name, brand_code: editBrand.brand_code, description: editBrand.description, status: editBrand.status, operates_365: editBrand.operates_365, operates_on_sundays: editBrand.operates_on_sundays, operates_on_holidays: editBrand.operates_on_holidays, min_daily_staff: editBrand.min_daily_staff }}
+            isLoading={updateBrand.isPending}
+            onSubmit={data => updateBrand.mutate({ id: editBrand.id, data })}
+          />
         </Modal>
       )}
       {deleteBrand && (
-        <ConfirmDialog open title="Delete Brand" message={`Delete brand "${deleteBrand.name}"? This cannot be undone.`} confirmLabel="Delete" confirmVariant="danger"
-          onConfirm={() => deleteBrandMut.mutate(deleteBrand.id)} onCancel={() => setDeleteBrand(null)} isLoading={deleteBrandMut.isPending} />
+        <ConfirmDialog
+          isOpen={true}
+          title="Delete Brand"
+          message={`Delete brand "${deleteBrand.brand_name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          confirmClass="btn-danger"
+          onConfirm={() => deleteBrandMut.mutate(deleteBrand.id)}
+          onClose={() => setDeleteBrand(null)}
+          loading={deleteBrandMut.isPending}
+        />
       )}
 
       {/* Process Modals */}
       {showProcessModal && (
-        <Modal open onClose={() => setShowProcessModal(false)} title="Add Process" size="lg">
+        <Modal isOpen={true} onClose={() => setShowProcessModal(false)} title="Add Process" size="lg">
           <ProcessForm brands={brands} isLoading={addProcess.isPending} onSubmit={data => addProcess.mutate(data)} />
         </Modal>
       )}
       {editProcess && (
-        <Modal open onClose={() => setEditProcess(null)} title="Edit Process" size="lg">
+        <Modal isOpen={true} onClose={() => setEditProcess(null)} title="Edit Process" size="lg">
           <ProcessForm brands={brands} defaultValues={{ ...editProcess, brand_id: editProcess.brand_id ?? '' }} isLoading={updateProcess.isPending} onSubmit={data => updateProcess.mutate({ id: editProcess.id, data })} />
         </Modal>
       )}
       {deleteProcess && (
-        <ConfirmDialog open title="Delete Process" message={`Delete process "${deleteProcess.name}"?`} confirmLabel="Delete" confirmVariant="danger"
-          onConfirm={() => deleteProcessMut.mutate(deleteProcess.id)} onCancel={() => setDeleteProcess(null)} isLoading={deleteProcessMut.isPending} />
+        <ConfirmDialog
+          isOpen={true}
+          title="Delete Process"
+          message={`Delete process "${deleteProcess.name}"?`}
+          confirmLabel="Delete"
+          confirmClass="btn-danger"
+          onConfirm={() => deleteProcessMut.mutate(deleteProcess.id)}
+          onClose={() => setDeleteProcess(null)}
+          loading={deleteProcessMut.isPending}
+        />
       )}
     </div>
   );

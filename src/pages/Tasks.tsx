@@ -426,10 +426,14 @@ export default function Tasks() {
   const addTask = useMutation({
     mutationFn: async (f: TaskFormState) => {
       if (!f.title.trim() || !f.assigned_to) throw new Error('Title and assignee are required');
+      // Get current user profile id for assigned_by
+      const { data: { user } } = await supabase.auth.getUser();
+      const assignedBy = user?.id ?? f.assigned_to; // fallback to assignee if no auth
       const { data, error } = await supabase.from('tasks').insert({
         title: f.title.trim(),
         description: f.description || null,
         assigned_to: f.assigned_to,
+        assigned_by: assignedBy,
         brand_id: f.brand_id || null,
         process_id: f.process_id || null,
         priority: f.priority,
@@ -438,13 +442,6 @@ export default function Tasks() {
         start_date: f.start_date || null,
       }).select().single();
       if (error) throw error;
-      // Create notification
-      await supabase.from('notifications').insert({
-        title: 'New Task Assigned',
-        message: `You have been assigned: ${f.title.trim()}`,
-        type: 'task',
-        is_read: false,
-      }).catch(() => {});
       return data;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tasks'] }); toast.success('Task created'); setShowAdd(false); setForm(defaultForm); },

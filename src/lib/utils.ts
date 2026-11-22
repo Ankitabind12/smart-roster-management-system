@@ -149,3 +149,10 @@ export const PRIORITY_COLORS: Record<string, string> = {
   high: 'bg-amber-100 text-amber-700',
   urgent: 'bg-red-100 text-red-700',
 };
+
+export const LEAVE_STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-amber-100 text-amber-700 border-amber-200',
+  approved: 'bg-green-100 text-green-700 border-green-200',
+  rejected: 'bg-red-100 text-red-700 border-red-200',
+  cancelled: 'bg-slate-100 text-slate-500 border-slate-200',
+};

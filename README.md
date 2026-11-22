@@ -395,37 +395,39 @@ rosterflow/
 
 ## 📐 Assessment Q&A
 
-**1. How did you model employees, brands, processes, pods and relationships?**
+# Tell Us How I Think
 
-Each entity has its own normalized table. Many-to-many relationships (employees↔brands, employees↔processes, pods↔brands) use explicit junction tables (`employee_brand_assignments`, `employee_process_assignments`, `pod_brand_assignments`). An employee can belong to multiple brands and processes simultaneously. No comma-separated strings or JSON arrays for relational data.
+### 1. How did you model employees, brands, processes, pods, and their relationships?
 
-**2. How does the system generate a roster and determine whether constraints are satisfied?**
+I kept employees, brands, processes, and pods as separate entities instead of combining everything into one table. An employee can be associated with one or more brands or processes, and a brand can have multiple processes with different staffing requirements. Pods help organize employees into teams and provide a way to manage roster operations at a team level. I used these relationships to make the system flexible enough to handle different team structures without duplicating employee data.
 
-The `RosterScheduler` class runs a 3-pass algorithm: (1) mark unavailable employees from leaves/comp-offs, (2) for each required brand/process/date slot, find eligible & available employees and assign greedily by fewest working days, (3) fill remaining slots with public_holiday/weekly_off/not_required. Constraints are checked as filters — an employee failing any hard constraint is excluded from the eligible pool for that slot.
+### 2. How does your system generate a roster and determine whether it satisfies the required constraints?
 
-**3. How did you handle single-resource brands and multi-employee brands?**
+The roster generator considers the selected month, employee assignments, working calendars, weekly offs, holidays, approved leaves, and staffing requirements. It generates assignments based on employee availability and the coverage required for each brand or process. After generation, the system validates the roster and identifies issues such as uncovered processes, insufficient staffing, or employees being assigned on unavailable days. The manager can review the generated roster, make changes, and validate it again before publishing.
 
-Both are handled identically by the algorithm. If `min_daily_staff = 1` and only one employee is assigned to the process, that employee is selected. If they are unavailable, a `critical` conflict is raised. For multi-employee brands, the algorithm assigns up to `min_daily_staff` employees sorted by fairness, and raises a `warning` if fewer than required are available.
+### 3. How did you handle the difference between single-resource brands and brands with multiple employees?
 
-**4. What happens when an employee managing all processes for a brand is unavailable?**
+I handled these two cases differently because their staffing requirements are not the same. For single-resource brands, the assigned employee is primarily responsible for covering the required work, so their availability becomes especially important. For multi-resource brands, the system has more flexibility because work can be distributed among multiple assigned employees. I used the staffing requirements of each brand or process to determine the required coverage and validate the assignments accordingly.
 
-The scheduler detects that zero eligible employees exist for the required slot and records a `critical` conflict: "No coverage for BrandX — ProcessY on YYYY-MM-DD". The suggested action lists all assigned employees and their current unavailability reason. The roster is marked with the conflict and cannot be published without an explicit manager override acknowledgment.
+### 4. What happens when an employee manages all processes for a brand but is unavailable on a required working day?
 
-**5. How does the system handle conflicting requirements or insufficient staffing?**
+The system checks the employee's availability before assigning work. If the employee is on leave, has a weekly off, or is otherwise unavailable on a required working day, the system identifies the resulting coverage gap. If another eligible employee is available and can handle the required process, the manager can assign them as a replacement. If no suitable replacement is available, the system flags the day as understaffed instead of silently generating an incomplete roster.
 
-Conflicts are recorded (never hidden) with severity, affected brand/process/date, and a suggested action. The roster is generated with the best possible coverage and all unresolved issues listed. The manager must review conflicts before publishing. The UI refuses to publish silently if critical conflicts exist.
+### 5. How does your system handle conflicting requirements or insufficient staffing?
 
-**6. Which parts are automated and which remain under human control? Why?**
+I separated scheduling rules into requirements that must be satisfied and situations that may need managerial decisions. For example, assigning an employee on approved leave or leaving a required process uncovered are treated as issues that need to be flagged. When there isn't enough staff to satisfy all requirements, the system highlights the conflict rather than forcing an invalid assignment. This makes the problem visible to the manager, who can decide whether to arrange a replacement or make an operational adjustment.
 
-Automated: slot identification, eligibility filtering, greedy assignment, conflict detection, email dispatch, notification creation. Human: leave approval (requires managerial judgment), roster publish (requires conflict review), manual overrides (business context the algorithm lacks), comp-off decisions. This boundary is intentional — mandatory business decisions need a human signature.
+### 6. Which parts of the process did you automate, and which did you leave under human control? Why?
 
-**7. If the company doubled in size, what would you change?**
+I automated repetitive tasks such as roster generation, availability checks, coverage validation, and conflict detection because these are time-consuming and can be handled using predefined rules. I kept roster review, manual adjustments, leave approvals, and final publishing under managerial control. I felt this balance was important because the system can handle routine scheduling efficiently, but real-world situations may require decisions that cannot always be handled by fixed rules.
 
-Switch from greedy to a constraint-satisfaction solver (e.g., OR-Tools) for better optimality at scale. Add database-level scheduling via PostgreSQL functions instead of client-side computation. Implement roster caching and incremental revalidation rather than full regeneration. Add team-level shift patterns.
+### 7. If the company doubled its team and brand count, what would you change about your solution?
 
-**8. What would you improve given one additional week?**
+If the system had to support twice as many employees and brands, I would focus on making the roster generation logic more efficient and improving how data is fetched and processed. I would also look at database indexing, reducing unnecessary requests, and handling roster generation in the background if it started taking longer. I would keep the data model flexible so that adding new brands, processes, or pods would not require major changes to the application.
 
-(a) Drag-and-drop roster editing grid, (b) bulk employee import from CSV, (c) roster export to Excel/PDF, (d) shift pattern templates, (e) manager announcement email with preview, (f) employee self-service comp-off requests, (g) mobile-responsive roster view.
+### 8. If you had one additional week to work on this, what would you improve first?
+
+If I had one more week, I would focus first on improving the roster generation and validation logic, especially for cases where employees handle multiple processes or where a single-resource brand has no available employee. I would also spend more time testing edge cases, improving the clarity of conflict messages, and making it easier for managers to understand why a particular assignment was made or why a coverage gap occurred. I think making the system more reliable and easier to use would be more valuable than adding more features at this stage.
 
 ---
 

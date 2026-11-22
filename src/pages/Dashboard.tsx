@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import {
@@ -210,7 +210,7 @@ export default function Dashboard() {
     queryKey: ['activity-log'],
     queryFn: async () => {
       const { data } = await supabase
-        .from('activity_log')
+        .from('activity_logs')
         .select('id, action, entity_type, entity_name, created_at, performed_by_name')
         .order('created_at', { ascending: false })
         .limit(10);

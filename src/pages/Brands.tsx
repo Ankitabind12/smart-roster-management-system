@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Plus, Edit, Trash2, Search, X, Tag, GitBranch, Toggle } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Tag, GitBranch } from 'lucide-react';
 import { Modal, ConfirmDialog } from '../components/shared/Modal';
 import { useToast } from '../components/shared/Toast';
 import { EmptyState } from '../components/shared/EmptyState';

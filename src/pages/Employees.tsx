@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import {
@@ -123,7 +123,7 @@ function EmployeeForm({
           <label className="form-label">Pod</label>
           <select {...register('pod_id')} className="input">
             <option value="">No Pod</option>
-            {pods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            {pods.map((p: any) => <option key={p.id} value={p.id}>{p.pod_name}</option>)}
           </select>
         </div>
         <div className="form-group">
@@ -201,7 +201,7 @@ function EmployeeDetailModal({ employee, onClose }: { employee: any; onClose: ()
   });
 
   return (
-    <Modal open onClose={onClose} title={employee.full_name} size="lg">
+    <Modal isOpen={true} onClose={onClose} title={employee.full_name} size="lg">
       <div className="space-y-6">
         {/* Basic info */}
         <div className="flex items-start gap-4">
@@ -303,18 +303,19 @@ export default function Employees() {
   const { data: pods = [] } = useQuery({
     queryKey: ['pods-list'],
     queryFn: async () => {
-      const { data } = await supabase.from('pods').select('id, name, code').eq('status', 'active').order('name');
+      const { data, error } = await supabase.from('pods').select('id, pod_name, pod_code').eq('status', 'active').order('pod_name');
+      if (error) return [];
       return data ?? [];
     },
   });
 
   // ---- Employees -----------------------------------------------------------
-  const { data: employeesData, isLoading } = useQuery({
+  const { data: employeesData, isLoading, error: empError } = useQuery({
     queryKey: ['employees', search, filterPod, filterRole, filterStatus, sort, page],
     queryFn: async () => {
       let query = supabase
         .from('employees')
-        .select('*, pods:pod_id(name, code)', { count: 'exact' });
+        .select('*, pods:pod_id(pod_name, pod_code)', { count: 'exact' });
 
       if (search) query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,designation.ilike.%${search}%,employee_id.ilike.%${search}%`);
       if (filterPod) query = query.eq('pod_id', filterPod);
@@ -326,10 +327,13 @@ export default function Employees() {
       query = query.range(from, from + PAGE_SIZE - 1);
 
       const { data, count, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('Employees query error:', error);
+        return { employees: [], total: 0 };
+      }
       return { employees: data ?? [], total: count ?? 0 };
     },
-    keepPreviousData: true,
+    staleTime: 1000 * 30,
   });
 
   const employees = employeesData?.employees ?? [];
@@ -437,7 +441,7 @@ export default function Employees() {
         </div>
         <select value={filterPod} onChange={e => { setFilterPod(e.target.value); setPage(1); }} className="input w-auto text-sm">
           <option value="">All Pods</option>
-          {pods.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {pods.map((p: any) => <option key={p.id} value={p.id}>{p.pod_name}</option>)}
         </select>
         <select value={filterRole} onChange={e => { setFilterRole(e.target.value); setPage(1); }} className="input w-auto text-sm">
           <option value="">All Roles</option>
@@ -502,7 +506,7 @@ export default function Employees() {
                     <td className="td text-slate-600">{emp.designation || '—'}</td>
                     <td className="td">
                       {emp.pods ? (
-                        <span className="badge bg-cyan-100 text-cyan-700">{emp.pods.name}</span>
+                        <span className="badge bg-cyan-100 text-cyan-700">{emp.pods.pod_name}</span>
                       ) : <span className="text-slate-300">—</span>}
                     </td>
                     <td className="td">
@@ -565,7 +569,7 @@ export default function Employees() {
 
       {/* Add Employee Modal */}
       {showAddModal && (
-        <Modal open onClose={() => setShowAddModal(false)} title="Add Employee" size="lg">
+        <Modal isOpen={true} onClose={() => setShowAddModal(false)} title="Add Employee" size="lg">
           <EmployeeForm
             pods={pods}
             isLoading={addEmployee.isPending}
@@ -576,7 +580,7 @@ export default function Employees() {
 
       {/* Edit Employee Modal */}
       {editEmployee && (
-        <Modal open onClose={() => setEditEmployee(null)} title="Edit Employee" size="lg">
+        <Modal isOpen={true} onClose={() => setEditEmployee(null)} title="Edit Employee" size="lg">
           <EmployeeForm
             pods={pods}
             isLoading={updateEmployee.isPending}
@@ -597,15 +601,13 @@ export default function Employees() {
 
       {/* Delete Confirm */}
       {deleteEmployee && (
-        <ConfirmDialog
-          open
-          title="Deactivate Employee"
+        <ConfirmDialog isOpen={true} title="Deactivate Employee"
           message={`Are you sure you want to deactivate ${deleteEmployee.full_name}? Their status will be set to "Terminated".`}
           confirmLabel="Deactivate"
-          confirmVariant="danger"
+          confirmClass="btn-danger"
           onConfirm={() => deactivateEmployee.mutate(deleteEmployee.id)}
-          onCancel={() => setDeleteEmployee(null)}
-          isLoading={deactivateEmployee.isPending}
+          onClose={() => setDeleteEmployee(null)}
+          loading={deactivateEmployee.isPending}
         />
       )}
     </div>

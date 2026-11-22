@@ -253,8 +253,8 @@ export default function Brands() {
       const { error } = await supabase.from('brands').insert(data);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast({ type: 'success', message: 'Brand added' }); setShowBrandModal(false); },
-    onError: (e: any) => toast({ type: 'error', message: e.message }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast('success', 'Brand added'); setShowBrandModal(false); },
+    onError: (e: any) => toast('error', e.message),
   });
 
   const updateBrand = useMutation({
@@ -262,32 +262,32 @@ export default function Brands() {
       const { error } = await supabase.from('brands').update(data).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast({ type: 'success', message: 'Brand updated' }); setEditBrand(null); },
-    onError: (e: any) => toast({ type: 'error', message: e.message }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast('success', 'Brand updated'); setEditBrand(null); },
+    onError: (e: any) => toast('error', e.message),
   });
 
   const deleteBrandMut = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('brands').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast({ type: 'success', message: 'Brand deleted' }); setDeleteBrand(null); },
-    onError: (e: any) => toast({ type: 'error', message: e.message }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['brands'] }); toast('success', 'Brand deleted'); setDeleteBrand(null); },
+    onError: (e: any) => toast('error', e.message),
   });
 
   const addProcess = useMutation({
     mutationFn: async (data: ProcessFormData) => { const { error } = await supabase.from('processes').insert(data); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast({ type: 'success', message: 'Process added' }); setShowProcessModal(false); },
-    onError: (e: any) => toast({ type: 'error', message: e.message }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast('success', 'Process added'); setShowProcessModal(false); },
+    onError: (e: any) => toast('error', e.message),
   });
 
   const updateProcess = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: ProcessFormData }) => { const { error } = await supabase.from('processes').update(data).eq('id', id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast({ type: 'success', message: 'Process updated' }); setEditProcess(null); },
-    onError: (e: any) => toast({ type: 'error', message: e.message }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast('success', 'Process updated'); setEditProcess(null); },
+    onError: (e: any) => toast('error', e.message),
   });
 
   const deleteProcessMut = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('processes').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast({ type: 'success', message: 'Process deleted' }); setDeleteProcess(null); },
-    onError: (e: any) => toast({ type: 'error', message: e.message }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['processes'] }); toast('success', 'Process deleted'); setDeleteProcess(null); },
+    onError: (e: any) => toast('error', e.message),
   });
 
   const processTypeColor: Record<string, string> = {
@@ -301,7 +301,7 @@ export default function Brands() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Brands & Processes</h1>
-          <p className="text-sm text-slate-500">{brands.length} brands Â· {processes.length} processes</p>
+          <p className="text-sm text-slate-500">{brands.length} brands Ã‚Â· {processes.length} processes</p>
         </div>
         <button
           onClick={() => tab === 'brands' ? setShowBrandModal(true) : setShowProcessModal(true)}
@@ -380,7 +380,7 @@ export default function Brands() {
                       <td className="td font-medium text-slate-800">{p.name}</td>
                       <td className="td font-mono text-xs text-slate-500">{p.code}</td>
                       <td className="td">
-                        {p.brands ? <span className="badge bg-indigo-100 text-indigo-700">{p.brands.name}</span> : 'â€”'}
+                        {p.brands ? <span className="badge bg-indigo-100 text-indigo-700">{p.brands.name}</span> : 'Ã¢â‚¬â€'}
                       </td>
                       <td className="td"><span className={cn('badge', processTypeColor[p.process_type])}>{p.process_type?.replace(/_/g, ' ').toUpperCase()}</span></td>
                       <td className="td text-slate-500">{p.min_daily_staff}</td>
@@ -388,7 +388,7 @@ export default function Brands() {
                         <div className="flex gap-1 flex-wrap">
                           {p.operates_on_sundays && <span className="badge bg-purple-100 text-purple-600 text-xs">Sun</span>}
                           {p.operates_on_holidays && <span className="badge bg-orange-100 text-orange-600 text-xs">Hol</span>}
-                          {!p.operates_on_sundays && !p.operates_on_holidays && <span className="text-slate-300 text-xs">â€”</span>}
+                          {!p.operates_on_sundays && !p.operates_on_holidays && <span className="text-slate-300 text-xs">Ã¢â‚¬â€</span>}
                         </div>
                       </td>
                       <td className="td"><span className={cn('badge', p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500')}>{p.status}</span></td>

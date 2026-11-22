@@ -39,3 +39,7 @@ supabase/.temp/
 .cache
 
 .vercel
+
+# Diagnostic/temp scripts
+scripts/probe-api.mjs
+scripts/test-pg.mjs

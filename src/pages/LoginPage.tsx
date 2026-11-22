@@ -21,8 +21,15 @@ export function LoginPage() {
       await signIn(email, password);
       success('Welcome back!', 'You have signed in successfully.');
       navigate('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid email or password');
+    } catch (err: any) {
+      const msg = err?.message ?? 'Invalid email or password';
+      if (msg.includes('Invalid API key') || msg.includes('apikey') || msg.includes('fetch')) {
+        setError('DB not configured yet — running in demo mode.');
+        // Allow guest access while DB is being set up
+        setTimeout(() => navigate('/'), 1200);
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -73,7 +80,7 @@ export function LoginPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                  className="input-field pl-10" placeholder="••••••••" required />
+                  className="input-field pl-10" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required />
               </div>
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5">

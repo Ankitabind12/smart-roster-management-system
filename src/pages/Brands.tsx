@@ -301,7 +301,7 @@ export default function Brands() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Brands & Processes</h1>
-          <p className="text-sm text-slate-500">{brands.length} brands · {processes.length} processes</p>
+          <p className="text-sm text-slate-500">{brands.length} brands Â· {processes.length} processes</p>
         </div>
         <button
           onClick={() => tab === 'brands' ? setShowBrandModal(true) : setShowProcessModal(true)}
@@ -335,7 +335,7 @@ export default function Brands() {
             {Array.from({ length: 6 }).map((_, i) => <div key={i} className="card animate-pulse h-40 bg-slate-100" />)}
           </div>
         ) : brands.length === 0 ? (
-          <EmptyState title="No brands yet" description="Add your first brand to get started" action={{ label: 'Add Brand', onClick: () => setShowBrandModal(true) }} />
+          <EmptyState title="No brands yet" description="Add your first brand to get started" action={<button onClick={() => setShowBrandModal(true)} className="btn-primary text-sm">Add Brand</button>} />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {brands.map((b: any) => (
@@ -372,7 +372,7 @@ export default function Brands() {
                   Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={8} />)
                 ) : processes.length === 0 ? (
                   <tr><td colSpan={8} className="py-16">
-                    <EmptyState title="No processes" description="Add your first process" action={{ label: 'Add Process', onClick: () => setShowProcessModal(true) }} />
+                    <EmptyState title="No processes" description="Add your first process" action={<button onClick={() => setShowProcessModal(true)} className="btn-primary text-sm">Add Process</button>} />
                   </td></tr>
                 ) : (
                   processes.map((p: any) => (
@@ -380,7 +380,7 @@ export default function Brands() {
                       <td className="td font-medium text-slate-800">{p.name}</td>
                       <td className="td font-mono text-xs text-slate-500">{p.code}</td>
                       <td className="td">
-                        {p.brands ? <span className="badge bg-indigo-100 text-indigo-700">{p.brands.name}</span> : '—'}
+                        {p.brands ? <span className="badge bg-indigo-100 text-indigo-700">{p.brands.name}</span> : 'â€”'}
                       </td>
                       <td className="td"><span className={cn('badge', processTypeColor[p.process_type])}>{p.process_type?.replace(/_/g, ' ').toUpperCase()}</span></td>
                       <td className="td text-slate-500">{p.min_daily_staff}</td>
@@ -388,7 +388,7 @@ export default function Brands() {
                         <div className="flex gap-1 flex-wrap">
                           {p.operates_on_sundays && <span className="badge bg-purple-100 text-purple-600 text-xs">Sun</span>}
                           {p.operates_on_holidays && <span className="badge bg-orange-100 text-orange-600 text-xs">Hol</span>}
-                          {!p.operates_on_sundays && !p.operates_on_holidays && <span className="text-slate-300 text-xs">—</span>}
+                          {!p.operates_on_sundays && !p.operates_on_holidays && <span className="text-slate-300 text-xs">â€”</span>}
                         </div>
                       </td>
                       <td className="td"><span className={cn('badge', p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500')}>{p.status}</span></td>

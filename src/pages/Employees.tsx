@@ -219,11 +219,11 @@ function EmployeeDetailModal({ employee, onClose }: { employee: any; onClose: ()
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div><span className="text-slate-400">Employee ID</span><p className="font-medium">{employee.employee_id}</p></div>
-          <div><span className="text-slate-400">Designation</span><p className="font-medium">{employee.designation || '—'}</p></div>
-          <div><span className="text-slate-400">Department</span><p className="font-medium">{employee.department || '—'}</p></div>
+          <div><span className="text-slate-400">Designation</span><p className="font-medium">{employee.designation || 'â€”'}</p></div>
+          <div><span className="text-slate-400">Department</span><p className="font-medium">{employee.department || 'â€”'}</p></div>
           <div><span className="text-slate-400">Weekly Off</span><p className="font-medium">{DAYS[employee.weekly_off_day]}</p></div>
-          <div><span className="text-slate-400">Joining Date</span><p className="font-medium">{employee.joining_date ? formatDate(employee.joining_date) : '—'}</p></div>
-          <div><span className="text-slate-400">Working Hours</span><p className="font-medium">{employee.working_hours ?? '—'} h/day</p></div>
+          <div><span className="text-slate-400">Joining Date</span><p className="font-medium">{employee.joining_date ? formatDate(employee.joining_date) : 'â€”'}</p></div>
+          <div><span className="text-slate-400">Working Hours</span><p className="font-medium">{employee.working_hours ?? 'â€”'} h/day</p></div>
         </div>
 
         {employee.skills?.length > 0 && (
@@ -251,7 +251,7 @@ function EmployeeDetailModal({ employee, onClose }: { employee: any; onClose: ()
                 {leaveHistory.map((l: any) => (
                   <tr key={l.id} className="py-1">
                     <td className="py-1.5 pr-4 capitalize">{l.leave_type}</td>
-                    <td className="py-1.5 pr-4">{formatDate(l.start_date)} – {formatDate(l.end_date)}</td>
+                    <td className="py-1.5 pr-4">{formatDate(l.start_date)} â€“ {formatDate(l.end_date)}</td>
                     <td><span className={cn('badge', { pending: 'bg-amber-100 text-amber-700', approved: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700' }[l.status] ?? 'bg-slate-100')}>{l.status}</span></td>
                   </tr>
                 ))}
@@ -488,7 +488,7 @@ export default function Employees() {
                     <EmptyState
                       title="No employees found"
                       description={search ? `No results for "${search}"` : 'Add your first employee to get started'}
-                      action={!search ? { label: 'Add Employee', onClick: () => setShowAddModal(true) } : undefined}
+                      action={!search ? <button onClick={() => setShowAddModal(true)} className="btn-primary text-sm">Add Employee</button> : undefined}
                     />
                   </td>
                 </tr>
@@ -503,11 +503,11 @@ export default function Employees() {
                     </td>
                     <td className="td font-mono text-xs text-slate-500">{emp.employee_id}</td>
                     <td className="td text-slate-500">{emp.email}</td>
-                    <td className="td text-slate-600">{emp.designation || '—'}</td>
+                    <td className="td text-slate-600">{emp.designation || 'â€”'}</td>
                     <td className="td">
                       {emp.pods ? (
                         <span className="badge bg-cyan-100 text-cyan-700">{emp.pods.pod_name}</span>
-                      ) : <span className="text-slate-300">—</span>}
+                      ) : <span className="text-slate-300">â€”</span>}
                     </td>
                     <td className="td">
                       <span className={cn('badge', roleColor[emp.role])}>{emp.role?.replace(/_/g, ' ')}</span>
@@ -540,7 +540,7 @@ export default function Employees() {
         {total > PAGE_SIZE && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50">
             <p className="text-xs text-slate-500">
-              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+              Showing {(page - 1) * PAGE_SIZE + 1}â€“{Math.min(page * PAGE_SIZE, total)} of {total}
             </p>
             <div className="flex items-center gap-1">
               <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="icon-btn disabled:opacity-40">
@@ -550,7 +550,7 @@ export default function Employees() {
                 .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
                 .map((p, idx, arr) => (
                   <React.Fragment key={p}>
-                    {idx > 0 && arr[idx - 1] !== p - 1 && <span className="text-slate-300 px-1">…</span>}
+                    {idx > 0 && arr[idx - 1] !== p - 1 && <span className="text-slate-300 px-1">â€¦</span>}
                     <button
                       onClick={() => setPage(p)}
                       className={cn('w-7 h-7 rounded text-xs font-medium', p === page ? 'bg-blue-600 text-white' : 'hover:bg-slate-200 text-slate-600')}
